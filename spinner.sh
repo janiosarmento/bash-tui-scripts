@@ -2,7 +2,7 @@
 
 #########
 #
-# Version: 20211127.1937
+_SPINNER_VERSION="20211127.1937"
 #
 #############################################
 
@@ -12,12 +12,8 @@
 # JSON de spinners:
 # https://raw.githubusercontent.com/sindresorhus/cli-spinners/master/spinners.json
 
-_SPINNER_VERSION="20211127.1937"
+[ -z ${Color_Off+x} ] && source /scripts/lib/colors.sh > /dev/null 2>&1
 
-if [ -z ${Color_Off+x} ]; then
-	# Se a variável não foi setada, então:
-	. /scripts/lib/colors.sh
-fi
 # usage:
 # (a_long_running_task) &
 # spinner $! "message"
