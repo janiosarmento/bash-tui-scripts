@@ -7,10 +7,8 @@ _GAUGE_VERSION="20211128.2048"
 #
 #############################################
 
-if [ -z ${Color_Off+x} ]; then
-	# Se a variável não foi setada, então:
-	. /scripts/lib/colors.sh
-fi
+[ -z ${Color_Off+x} ]; source /scripts/lib/colors.sh > /dev/null 2>&1
+[ -z ${_STRINGS_VERSION+x} ]; source /scripts/lib/strings.sh > /dev/null 2>&1
 
 gauge() {
 	local Total=$1
