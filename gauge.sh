@@ -3,22 +3,22 @@
 
 #########
 #
-_GAUGE_VERSION="20211128.2048"
+_GAUGE_VERSION="20211130.2321"
 #
 #############################################
 
-[ -z ${Color_Off+x} ]; source /scripts/lib/colors.sh > /dev/null 2>&1
-[ -z ${_STRINGS_VERSION+x} ]; source /scripts/lib/strings.sh > /dev/null 2>&1
+source /scripts/lib/colors.sh
+source /scripts/lib/strings.sh
 
 gauge() {
 	local Total=$1
 	local Parcial=$2
-	local Largura
+	local Transcorrido=${3-none}
 	local LarguraMax=100
-	local Temp
 	local Gauge=' '
-	local width
 	local nbsp=$'\u00A0'
+	local Largura Temp width Porcento ladoEsquerdo inteiro fracao ladoDireito impressao
+	local Estimado tempoRestante
 
 	width=$(tput cols)
 
@@ -30,16 +30,18 @@ gauge() {
 	Largura=$((width - 15))
 	((Largura > LarguraMax)) && Largura=${LarguraMax}
 
-	Porcento=$(echo "scale=3;100 * ${Parcial} / ${Total}" | bc ) # Percentual em forma de fracionário
-	ladoEsquerdo=$(echo "scale=2;${Largura} * ${Porcento} / 100" | bc)
-	ladoEsquerdo="0${ladoEsquerdo}000"
+	Porcento=$(echo "scale=13;100 * ${Parcial} / ${Total}" | bc ) # Percentual em forma de fracionário
+	ladoEsquerdo=$(echo "scale=4;${Largura} * ${Porcento} / 100" | bc)
+	ladoEsquerdo="0${ladoEsquerdo}000" # Adiciona zeros à esquerda e à direita para manter a largura exata
 	inteiro=$( echo "${ladoEsquerdo}" | cut -d '.' -f 1 )
 	inteiro=$( echo "${inteiro} * 1" | bc )
 	fracao=$(  echo "${ladoEsquerdo}" | cut -d '.' -f 2 )
-	fracao=$(  echo "scale=0;${fracao} / 100" | bc )
+	fracao=$(  echo "scale=0; (${Porcento} - ${inteiro}) * 1000" | bc )
+	fracao=${fracao%.*}
 	ladoDireito=$(( Largura - inteiro - 1))
 
 	impressao="$( repeatString "█" "${inteiro}" )"
+
 	if (( fracao > 800)); then
 		impressao+="▊"
 	elif (( fracao > 675)); then
@@ -53,8 +55,20 @@ gauge() {
 	elif (( fracao > 125)); then
 		impressao+="▏"
 	fi
-	Porcento=$(printf "%3s" "${inteiro}")
 
-	Gauge="${Color_Off}${Porcento}% ${Blue}${On_White}${impressao}$( repeatString "${nbsp}" "${ladoDireito}" )${Color_Off}"
+	Gauge="${Color_Off}$(printf "%3s" "${inteiro}")% ${Blue}${On_White}${impressao}$( repeatString "${nbsp}" "${ladoDireito}" )${Color_Off}"
 	echo -ne "${Gauge}\r"
+
+	if [[ "${Transcorrido}" != "none" ]]; then
+		Estimado=$( echo "${Transcorrido} * 100 / ${Porcento}" | bc -l	)
+		tempoRestante=$( echo "scale=0; ${Estimado} - ${Transcorrido}" | bc -l )
+		Transcorrido=$(secs_to_human "${Transcorrido}")
+		Estimado=$(secs_to_human "${Estimado}")
+		tempoRestante=$(secs_to_human "${tempoRestante}")
+		Gauge="     ${Yellow}Transcorrido: ${Color_Off} ${Transcorrido}"
+		Gauge+="    ${Yellow}Estimado:${Color_Off} ${Estimado}"
+		Gauge+="    ${Yellow}Restante:${Color_Off} ${tempoRestante}${Clear_EOL}"
+		echo ""
+		echo -ne "${Gauge}\r"
+	fi
 }
