@@ -2,7 +2,7 @@
 
 #########
 #
-_STRINGS_VERSION="20211129.1810"
+_STRINGS_VERSION="20211130.2319"
 #
 #############################################
 
@@ -102,7 +102,19 @@ replace() {
 }
 
 secs_to_human() {
-	echo "$((${1} / 3600))h $(((${1} / 60) % 60))min $((${1} % 60))s"
+	T=$1
+	T=${T%.*}
+	D=$((T / 60 / 60 / 24))
+	H=$((T / 60 / 60 % 24))
+	M=$((T / 60 % 60))
+	S=$((T % 60))
+
+	if [[ ${D} != 0 ]]; then
+		printf '%dd %02d:%02d:%02d' $D $H $M $S
+	else
+		printf '%02d:%02d:%02d' $H $M $S
+	fi
+
 }
 # number    strlen ( string )
 # Returns the length of {string}
